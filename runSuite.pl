@@ -15,6 +15,7 @@ my $SCRIPT_PATH = dirname( __FILE__ );
 dieWithUsage("one or more parameters not defined") unless @ARGV >= 1;
 my $suite = shift;
 my $scale = shift || 2;
+my $fsspec = shift || "hdfs";
 dieWithUsage("suite name required") unless $suite eq "tpcds" or $suite eq "tpch";
 
 chdir $SCRIPT_PATH;
@@ -26,8 +27,8 @@ if( $suite eq 'tpcds' ) {
 my @queries = glob '*.sql';
 
 my $db = { 
-	'tpcds' => "tpcds_bin_partitioned_orc_$scale",
-	'tpch' => "tpch_flat_orc_$scale"
+	'tpcds' => "tpcds_bin_partitioned_${fsspec}_orc_$scale",
+	'tpch' => "tpch_flat_orc_${fsspec}_$scale"
 };
 
 print "filename,status,time,rows\n";
@@ -66,10 +67,10 @@ sub dieWithUsage(;$) {
 
 	print STDERR <<USAGE;
 ${err}Usage:
-	perl ${SCRIPT_NAME} [tpcds|tpch] [scale]
+	perl ${SCRIPT_NAME} [tpcds|tpch] [scale] [filesystem_spec]
 
 Description:
-	This script runs the sample queries and outputs a CSV file of the time it took each query to run.  Also, all hive output is kept as a log file named 'queryXX.sql.log' for each query file of the form 'queryXX.sql'. Defaults to scale of 2.
+	This script runs the sample queries and outputs a CSV file of the time it took each query to run.  Also, all hive output is kept as a log file named 'queryXX.sql.log' for each query file of the form 'queryXX.sql'. Defaults to scale of 2 and hdfs as filesystem_spec.
 USAGE
 	exit 1;
 }

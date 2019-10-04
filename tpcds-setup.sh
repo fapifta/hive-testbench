@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function usage {
-	echo "Usage: tpcds-setup.sh scale_factor [temp_directory]"
+	echo "Usage: tpcds-setup.sh scale_factor [temp_directory] [db_default_location]"
 	exit 1
 }
 
@@ -31,7 +31,7 @@ FACTS="store_sales store_returns web_sales web_returns catalog_sales catalog_ret
 SCALE=$1
 DIR=$2
 if [ "X$BUCKET_DATA" != "X" ]; then
-	BUCKETS=13
+	BUCKETS=13a
 	RETURN_BUCKETS=13
 else
 	BUCKETS=1
@@ -51,6 +51,16 @@ fi
 if [ $SCALE -eq 1 ]; then
 	echo "Scale factor must be greater than 1"
 	exit 1
+fi
+if [ X"$FSSPEC" = "X" ]; then
+	FSSPEC="_hdfs"
+else
+	FSSPEC="_${FSSPEC}"
+fi
+
+DBLOCATIONSPEC=""
+if [ "X$3" != "X" ]; then
+	DBLOCATIONSPEC="--hivevar DBLOCATION=$3"
 fi
 
 # Do the actual data load.
@@ -74,7 +84,7 @@ HIVE="beeline -n hive -u 'jdbc:hive2://localhost:2181/;serviceDiscoveryMode=zooK
 
 # Create the text/flat tables as external tables. These will be later be converted to ORCFile.
 echo "Loading text data into external tables."
-runcommand "$HIVE  -i settings/load-flat.sql -f ddl-tpcds/text/alltables.sql --hivevar DB=tpcds_text_${SCALE} --hivevar LOCATION=${DIR}/${SCALE}"
+runcommand "$HIVE  -i settings/load-flat.sql -f ddl-tpcds/text/alltables.sql --hivevar DB=tpcds_text${FSSPEC}_${SCALE} --hivevar LOCATION=${DIR}/${SCALE} ${DBLOCATIONSPEC}"
 
 # Create the partitioned and bucketed tables.
 if [ "X$FORMAT" = "X" ]; then
@@ -91,7 +101,7 @@ echo -e "all: ${DIMS} ${FACTS}" > $LOAD_FILE
 
 i=1
 total=24
-DATABASE=tpcds_bin_partitioned_${FORMAT}_${SCALE}
+DATABASE=tpcds_bin_partitioned${FSSPEC}_${FORMAT}_${SCALE}
 MAX_REDUCERS=2500 # maximum number of useful reducers for any scale 
 REDUCERS=$((test ${SCALE} -gt ${MAX_REDUCERS} && echo ${MAX_REDUCERS}) || echo ${SCALE})
 
@@ -99,10 +109,11 @@ REDUCERS=$((test ${SCALE} -gt ${MAX_REDUCERS} && echo ${MAX_REDUCERS}) || echo $
 for t in ${DIMS}
 do
 	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/bin_partitioned/${t}.sql \
-	    --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} --hivevar SOURCE=tpcds_text_${SCALE} \
-            --hivevar SCALE=${SCALE} \
-	    --hivevar REDUCERS=${REDUCERS} \
-	    --hivevar FILE=${FORMAT}"
+		--hivevar DB=tpcds_bin_partitioned${FSSPEC}_${FORMAT}_${SCALE} --hivevar SOURCE=tpcds_text${FSSPEC}_${SCALE} \
+		--hivevar SCALE=${SCALE} \
+		--hivevar REDUCERS=${REDUCERS} \
+		--hivevar FILE=${FORMAT} \
+		${DBLOCATIONSPEC}"
 	echo -e "${t}:\n\t@$COMMAND $SILENCE && echo 'Optimizing table $t ($i/$total).'" >> $LOAD_FILE
 	i=`expr $i + 1`
 done
@@ -110,10 +121,11 @@ done
 for t in ${FACTS}
 do
 	COMMAND="$HIVE  -i settings/load-partitioned.sql -f ddl-tpcds/bin_partitioned/${t}.sql \
-	    --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE} \
-            --hivevar SCALE=${SCALE} \
-	    --hivevar SOURCE=tpcds_text_${SCALE} --hivevar BUCKETS=${BUCKETS} \
-	    --hivevar RETURN_BUCKETS=${RETURN_BUCKETS} --hivevar REDUCERS=${REDUCERS} --hivevar FILE=${FORMAT}"
+		--hivevar DB=tpcds_bin_partitioned${FSSPEC}_${FORMAT}_${SCALE} \
+		--hivevar SCALE=${SCALE} \
+		--hivevar SOURCE=tpcds_text${FSSPEC}_${SCALE} --hivevar BUCKETS=${BUCKETS} \
+		--hivevar RETURN_BUCKETS=${RETURN_BUCKETS} --hivevar REDUCERS=${REDUCERS} --hivevar FILE=${FORMAT} \
+		${DBLOCATIONSPEC}"
 	echo -e "${t}:\n\t@$COMMAND $SILENCE && echo 'Optimizing table $t ($i/$total).'" >> $LOAD_FILE
 	i=`expr $i + 1`
 done
@@ -122,6 +134,6 @@ make -j 1 -f $LOAD_FILE
 
 
 echo "Loading constraints"
-runcommand "$HIVE -f ddl-tpcds/bin_partitioned/add_constraints.sql --hivevar DB=tpcds_bin_partitioned_${FORMAT}_${SCALE}"
+runcommand "$HIVE -f ddl-tpcds/bin_partitioned/add_constraints.sql --hivevar DB=tpcds_bin_partitioned${FSSPEC}_${FORMAT}_${SCALE}"
 
 echo "Data loaded into database ${DATABASE}."
