@@ -3,3 +3,6 @@ tpcds_kit.zip
 tpch_kit.zip
 *.sql.log
 derby.log
+apache*
+load*.mk
+tpcds-gen/dsdgen
