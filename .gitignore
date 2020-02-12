@@ -6,3 +6,4 @@ derby.log
 apache*
 load*.mk
 tpcds-gen/dsdgen
+.idea
