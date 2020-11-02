@@ -65,12 +65,12 @@ runcommand "$HIVE -f tpcds-cleanup/db_drop.sql --hivevar DB=tpcds_bin_partitione
 runcommand "$HIVE -f tpcds-cleanup/db_drop.sql --hivevar DB=tpcds_text${FSSPEC}_${SCALE}"
 
 echo "Removing data folders from filesystem"
-hdfs dfs -rm -R -skipTrash o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
-hdfs dfs -rm -R -skipTrash o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
-hdfs dfs -mkdir o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
-hdfs dfs -chown hive:hive o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
-hdfs dfs -chmod 775 o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
-hdfs dfs -mkdir o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
-hdfs dfs -chown hive:hive o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
-hdfs dfs -chmod 775 o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
+#hdfs dfs -rm -R -skipTrash o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
+#hdfs dfs -rm -R -skipTrash o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
+#hdfs dfs -mkdir o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
+#hdfs dfs -chown hive:hive o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
+#hdfs dfs -chmod 775 o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/tpcds_temp
+#hdfs dfs -mkdir o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
+#hdfs dfs -chown hive:hive o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
+#hdfs dfs -chmod 775 o3fs://hive.warehouse.vc0101.halxg.cloudera.com:9862/data
 
