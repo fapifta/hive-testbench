@@ -1,4 +1,4 @@
-create database if not exists ${DB} location '${DBLOCATION}' managedlocation '${DBLOCATION}/managed';
+create database if not exists ${DB} location '${LOCATION}' managedlocation '${DBLOCATION}';
 use ${DB};
 -- Table<store_sales (23 cols)  partition=ss_sold_date_sk>
 
