@@ -1,4 +1,4 @@
-create database if not exists ${DB} LOCATION "${DBLOCATION}";
+create database if not exists ${DB} MANAGEDLOCATION "${DBLOCATION}";
 use ${DB};
 
 drop table if exists catalog_returns;

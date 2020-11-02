@@ -1,4 +1,4 @@
-create database if not exists ${DB} location "${DBLOCATION}";
+create database if not exists ${DB} managedlocation "${DBLOCATION}";
 use ${DB};
 
 drop table if exists income_band;
