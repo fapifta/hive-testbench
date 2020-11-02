@@ -29,4 +29,6 @@ set hive.tez.container.size=10240;
 -- set mapreduce.reduce.memory.mb=4096;
 -- set io.sort.mb=800;
 
+set hive.optimize.sort.dynamic.partition=true;
 set hive.optimize.sort.dynamic.partition.threshold=0;
+set hive.acid.direct.insert.enabled=true;
